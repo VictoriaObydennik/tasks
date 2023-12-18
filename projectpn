@@ -1,1 +1,46 @@
+import logging
+from telegram.ext import Updater, MessageHandler, Filters
+import collections
+import re
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                     level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
+word_counts = {}
+
+def keys(update, context):
+    message = update.message
+    if message.forward_date:
+        text = message.text
+        text = text.translate(str.maketrans('', '', string.punctuation)).lower()
+        words = word_tokenize(text)
+        lemmatizer = WordNetLemmatizer()
+        stop_words = set(stopwords.words('english')).union(set(stopwords.words('russian')))
+        words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
+        word_counts.update(collections.Counter(words))
+        filtered_words = [word for word, count in word_counts.items() if count > 1]
+        most_common_words = collections.Counter(filtered_words).most_common(7)
+        most_common_words_string = '\n'.join([f'{word}: {count}' for word, count in most_common_words])
+        if len(filtered_words) < 7:
+            update.message.reply_text(f'There are only {len(filtered_words)} words that appear multiple times in the messages. They are:\n{most_common_words_string}')
+        else:
+            update.message.reply_text(f'The 7 most common words in the messages are:\n{most_common_words_string}')
+
+def main():
+    updater = ('6478645217:AAEB-7lyG2xnaAqN-Ehrx7ZZrZTSXx-gSNc', use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(MessageHandler(Filters.text, keys))
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
 
