@@ -1,5 +1,5 @@
-import logging
-from telegram.ext import Updater, MessageHandler, Filters
+import os
+import telebot
 import collections
 import re
 import nltk
@@ -9,15 +9,13 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                     level=logging.INFO)
+print(os.environ)
 
-logger = logging.getLogger(__name__)
+API_KEY = os.environ.get('6806369048:AAFGcsXTHUPNqgXoDoaSDnXfDW-WOYdFSFg')
+bot = telebot.TeleBot(API_KEY)
 
-word_counts = {}
-
-def keys(update, context):
-    message = update.message
+@bot.message_handler(content_types=['text'])
+def keys(message):
     if message.forward_date:
         text = message.text
         text = text.translate(str.maketrans('', '', string.punctuation)).lower()
@@ -30,17 +28,9 @@ def keys(update, context):
         most_common_words = collections.Counter(filtered_words).most_common(7)
         most_common_words_string = '\n'.join([f'{word}: {count}' for word, count in most_common_words])
         if len(filtered_words) < 7:
-            update.message.reply_text(f'There are only {len(filtered_words)} words that appear multiple times in the messages. They are:\n{most_common_words_string}')
+            bot.reply_to(message, f'болтали бессвязно, вот темы:\n{most_common_words_string}')
         else:
-            update.message.reply_text(f'The 7 most common words in the messages are:\n{most_common_words_string}')
+            bot.reply_to(message, f':\n{most_common_words_string}')
 
-def main():
-    updater = ('6478645217:AAEB-7lyG2xnaAqN-Ehrx7ZZrZTSXx-gSNc', use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(MessageHandler(Filters.text, keys))
-    updater.start_polling()
-    updater.idle()
-
-if __name__ == '__main__':
-    main()
+bot.polling()
 
