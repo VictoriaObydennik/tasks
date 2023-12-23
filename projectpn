@@ -8,10 +8,13 @@ nltk.download('punkt')
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from nltk.corpus import wordnet
+from itertools import chain
+import string
 
-print(os.environ)
 
-API_KEY = os.environ.get('6806369048:AAFGcsXTHUPNqgXoDoaSDnXfDW-WOYdFSFg')
+
+API_KEY ='6806369048:AAFGcsXTHUPNqgXoDoaSDnXfDW-WOYdFSFg'
 bot = telebot.TeleBot(API_KEY)
 
 @bot.message_handler(content_types=['text'])
@@ -23,14 +26,15 @@ def keys(message):
         lemmatizer = WordNetLemmatizer()
         stop_words = set(stopwords.words('english')).union(set(stopwords.words('russian')))
         words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
+        word_counts = collections.Counter()
         word_counts.update(collections.Counter(words))
         filtered_words = [word for word, count in word_counts.items() if count > 1]
         most_common_words = collections.Counter(filtered_words).most_common(7)
         most_common_words_string = '\n'.join([f'{word}: {count}' for word, count in most_common_words])
-        if len(filtered_words) < 7:
-            bot.reply_to(message, f'болтали бессвязно, вот темы:\n{most_common_words_string}')
+        if not len(filtered_words) :
+            bot.reply_to(message, f'обо всём и ни о чём')
         else:
-            bot.reply_to(message, f':\n{most_common_words_string}')
+            bot.reply_to(message, f'\n{most_common_words_string}') 
 
-bot.polling()
+bot.infinity_polling()
 
